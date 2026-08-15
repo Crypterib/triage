@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-"""Generate the one-page Lead Triage system documentation PDF.
+"""Generate the one-page Lead Triage documentation PDF.
 
-Voice: developer-notes, first-person, opinionated. Mentions trade-offs
-explicitly. Written to read like a real engineer's write-up rather than
-polished marketing copy.
+Voice: informal, Nigerian English, simple words. No big design — just
+black on white, plain Helvetica, thin rules. Reads like a developer
+jotting down notes for a colleague, not a polished write-up.
 """
 
 import os
-import sys
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.units import mm
@@ -18,35 +17,24 @@ from reportlab.platypus import (
     Spacer,
     Table,
     TableStyle,
-    KeepTogether,
 )
-from reportlab.lib.enums import TA_LEFT, TA_JUSTIFY
+from reportlab.lib.enums import TA_LEFT
 
-# ━━ Cascade Palette (auto-generated, then nudged to match the app's warm
-#    terracotta/ink palette so the doc feels like part of the same product) ━━
-PAGE_BG = colors.HexColor("#FAF7F2")  # warm paper
-SECTION_BG = colors.HexColor("#F0EDE6")
-CARD_BG = colors.HexColor("#F5F1EA")
-TABLE_STRIPE = colors.HexColor("#F5F1EA")
-HEADER_FILL = colors.HexColor("#7A3A1D")  # deep terracotta
-BORDER = colors.HexColor("#D8D2C4")
-ICON = colors.HexColor("#8F7A3C")
-ACCENT = colors.HexColor("#8C7226")
-TEXT_PRIMARY = colors.HexColor("#1F1B16")
-TEXT_MUTED = colors.HexColor("#6B6359")
-SEM_GO = colors.HexColor("#3F7A52")
-SEM_HOLD = colors.HexColor("#A67828")
-SEM_NO = colors.HexColor("#6B6359")
+# plain black and white palette
+INK = colors.HexColor("#000000")
+GREY = colors.HexColor("#666666")
+LINE = colors.HexColor("#000000")
+SOFT = colors.HexColor("#F2F2F2")
 
 OUTPUT_PATH = "/home/z/my-project/download/lead-triage-documentation.pdf"
 
-# ── styles ──────────────────────────────────────────────────────────────────
+# styles
 title_style = ParagraphStyle(
     "title",
     fontName="Helvetica-Bold",
-    fontSize=17,
-    leading=20,
-    textColor=TEXT_PRIMARY,
+    fontSize=16,
+    leading=19,
+    textColor=INK,
     spaceAfter=2,
 )
 
@@ -55,7 +43,7 @@ subtitle_style = ParagraphStyle(
     fontName="Helvetica",
     fontSize=9,
     leading=11,
-    textColor=TEXT_MUTED,
+    textColor=GREY,
     spaceAfter=10,
 )
 
@@ -64,7 +52,7 @@ h2_style = ParagraphStyle(
     fontName="Helvetica-Bold",
     fontSize=10.5,
     leading=13,
-    textColor=HEADER_FILL,
+    textColor=INK,
     spaceBefore=8,
     spaceAfter=3,
 )
@@ -72,91 +60,74 @@ h2_style = ParagraphStyle(
 body_style = ParagraphStyle(
     "body",
     fontName="Helvetica",
-    fontSize=8.7,
-    leading=11.6,
-    textColor=TEXT_PRIMARY,
+    fontSize=8.8,
+    leading=11.8,
+    textColor=INK,
     alignment=TA_LEFT,
     spaceAfter=4,
 )
 
-bullet_style = ParagraphStyle(
-    "bullet",
-    fontName="Helvetica",
-    fontSize=8.7,
-    leading=11.4,
-    textColor=TEXT_PRIMARY,
-    leftIndent=10,
-    bulletIndent=2,
-    spaceAfter=2,
-    alignment=TA_LEFT,
-)
-
-code_style = ParagraphStyle(
-    "code",
-    fontName="Courier",
-    fontSize=8,
-    leading=10,
-    textColor=HEADER_FILL,
-)
-
-# ── content ─────────────────────────────────────────────────────────────────
+# content
 story = []
 
 # Header
-story.append(Paragraph("Lead Triage — System Documentation", title_style))
+story.append(Paragraph("Lead Triage — how it works", title_style))
 story.append(Paragraph(
-    "A short note on what this is, how it works, and why it makes the calls it makes. "
-    "Built for the Cohort 3 assessment.",
+    "A short note on what I built, how it works, and why I made some of the calls I made.",
     subtitle_style,
 ))
 
-# Thin rule
+# Thin black rule
 rule = Table([[""]], colWidths=[170 * mm], rowHeights=[0.5])
-rule.setStyle(TableStyle([("LINEABOVE", (0, 0), (-1, -1), 0.5, BORDER)]))
+rule.setStyle(TableStyle([("LINEABOVE", (0, 0), (-1, -1), 0.6, LINE)]))
 story.append(rule)
 story.append(Spacer(1, 6))
 
 # Overview
-story.append(Paragraph("Overview", h2_style))
+story.append(Paragraph("What this thing does", h2_style))
 story.append(Paragraph(
-    "The system takes a CSV export of inbound leads (contact details, company info, "
-    "free-text notes from previous conversations) and returns a ranked shortlist with "
-    "three buckets: <b>contact now</b>, <b>nurture</b>, <b>disqualify</b>. It runs as a "
-    "Next.js app — drop the CSV in the upload zone, get a scored table back. The sample "
-    "export (520 rows) processes in ~200ms server-side. No manual review required.",
+    "You drop a CSV of inbound leads inside — contact details, company info, and the "
+    "free-text notes from previous chats. The system gives you back a ranked shortlist "
+    "with three buckets: <b>contact now</b>, <b>nurture</b>, and <b>disqualify</b>. "
+    "It runs as a Next.js app. You put the CSV in the upload box, you get a scored "
+    "table back. The sample export (520 rows) runs in about 200ms on the server. "
+    "No need to look at anything by hand.",
     body_style,
 ))
 
 # Architecture
-story.append(Paragraph("Architecture &amp; how the workflow runs", h2_style))
+story.append(Paragraph("How I built it", h2_style))
 story.append(Paragraph(
-    "Single-page Next.js 16 + TypeScript app on Vercel. Flow: <font face=\"Courier\">CSV → "
-    "POST /api/triage → JSON → table</font>. No database, no auth, no external API calls — "
-    "the whole thing runs on the free Vercel tier. The scoring logic lives in "
-    "<font face=\"Courier\">src/lib/leads/</font> as pure functions split across four files: "
-    "<font face=\"Courier\">cleaners.ts</font> (date / employee / budget / ID normalisation), "
-    "<font face=\"Courier\">signals.ts</font> (the phrase-banks + signal extractor), "
-    "<font face=\"Courier\">score.ts</font> (decision rules), "
-    "<font face=\"Courier\">triage.ts</font> (orchestrator). Every weight is a named constant "
-    "you can audit and tune.",
+    "It is a single-page Next.js 16 + TypeScript app on Vercel. The flow is simple: "
+    "<font face=\"Courier\">CSV → POST /api/triage → JSON → table</font>. No database, "
+    "no login, no external API calls. Everything runs on the free Vercel tier. The "
+    "scoring logic sits in <font face=\"Courier\">src/lib/leads/</font> as plain "
+    "functions inside four files: <font face=\"Courier\">cleaners.ts</font> handles "
+    "date, employee, budget and ID normalisation; <font face=\"Courier\">signals.ts</font> "
+    "holds the phrase-banks and signal extractor; <font face=\"Courier\">score.ts</font> "
+    "has the decision rules; <font face=\"Courier\">triage.ts</font> is the orchestrator "
+    "that ties everything together. Every weight is a named constant, so you can check "
+    "and tune it yourself.",
     body_style,
 ))
 story.append(Paragraph(
-    "<b>Workflow:</b> 1) Click <i>Use sample data</i> or upload a CSV.  2) Server parses, "
-    "cleans, scores, ranks every lead.  3) UI shows ranked table — contact now at the top, "
-    "sorted by score.  4) Filter by status / source / free-text search.  5) Click any row to "
-    "see the full signal breakdown and original notes.  6) Click Export to download the "
-    "triaged list as CSV with the top signals per lead.",
+    "<b>How you use it:</b> 1) Click <i>Use sample data</i> or upload your CSV. "
+    "2) The server parses, cleans, scores and ranks every lead. 3) The UI shows the "
+    "ranked table — contact now on top, sorted by score. 4) Filter by status, source, "
+    "or just search by text. 5) Click any row to see the full signal breakdown and the "
+    "original notes. 6) Click Export to download the triaged list as a CSV, with the "
+    "top signals per lead.",
     body_style,
 ))
 
 # Qualification logic
-story.append(Paragraph("Qualification logic — what counts as &quot;worth contacting&quot;", h2_style))
+story.append(Paragraph("What counts as worth contacting now", h2_style))
 story.append(Paragraph(
-    "A lead is <b>contact now</b> only if it has an explicit <b>urgency signal</b> in the "
-    "notes <i>and</i> a score ≥ 65. Urgency signals are phrases like <i>budget approved</i>, "
-    "<i>decision this month</i>, <i>ready to pilot</i>, <i>I make the call here</i>, "
-    "<i>keen to move fast</i>. The score is a weighted sum of discrete signals:",
+    "A lead is <b>contact now</b> only if it has a clear <b>urgency signal</b> in the "
+    "notes <i>and</i> a score of 65 or above. Urgency signals are phrases like "
+    "<i>budget approved</i>, <i>decision this month</i>, <i>ready to pilot</i>, "
+    "<i>I make the call here</i>, <i>keen to move fast</i>. The score is just a sum of "
+    "weighted signals:",
     body_style,
 ))
 
@@ -174,58 +145,59 @@ signals_table = Table(
     colWidths=[36 * mm, 24 * mm, 110 * mm],
 )
 signals_table.setStyle(TableStyle([
-    ("BACKGROUND", (0, 0), (-1, 0), HEADER_FILL),
+    ("BACKGROUND", (0, 0), (-1, 0), INK),
     ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
     ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
     ("FONTSIZE", (0, 0), (-1, 0), 8),
     ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
     ("FONTSIZE", (0, 1), (-1, -1), 7.8),
-    ("TEXTCOLOR", (0, 1), (-1, -1), TEXT_PRIMARY),
-    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, TABLE_STRIPE]),
+    ("TEXTCOLOR", (0, 1), (-1, -1), INK),
+    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, SOFT]),
     ("VALIGN", (0, 0), (-1, -1), "TOP"),
     ("LEFTPADDING", (0, 0), (-1, -1), 4),
     ("RIGHTPADDING", (0, 0), (-1, -1), 4),
     ("TOPPADDING", (0, 0), (-1, -1), 3),
     ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-    ("LINEBELOW", (0, 0), (-1, 0), 0.4, BORDER),
-    ("GRID", (0, 1), (-1, -1), 0.25, BORDER),
+    ("LINEBELOW", (0, 0), (-1, 0), 0.4, LINE),
+    ("GRID", (0, 1), (-1, -1), 0.25, LINE),
 ]))
 story.append(signals_table)
 story.append(Spacer(1, 4))
 story.append(Paragraph(
-    "On the sample export of 520 leads: <b><font color=\"#3F7A52\">100 contact now</font></b> "
-    "(19%), <b><font color=\"#A67828\">245 nurture</font></b> (47%), "
-    "<b><font color=\"#6B6359\">175 disqualify</font></b> (34%). Average score 57.4, median 64.",
+    "On the sample export of 520 leads: <b>100 contact now</b> (19%), "
+    "<b>245 nurture</b> (47%), <b>175 disqualify</b> (34%). Average score 57.4, median 64.",
     body_style,
 ))
 
-# Assumptions + trade-offs in two columns to save vertical space
+# Assumptions + trade-offs in two columns
 assumptions_html = (
-    "<b>Key assumptions</b><br/>"
-    "• The CSV format from the brief is the canonical input — future exports with "
-    "the same columns just work.<br/>"
-    "• &quot;Comparing options&quot; + no urgency = nurture, not contact now. Could go "
-    "either way; picked the conservative side.<br/>"
-    "• &quot;VC here — wanting to intro portfolio companies&quot; disqualifies. They're "
-    "not the buyer.<br/>"
-    "• Date <font face=\"Courier\">04-06-2024</font> resolved as D-M-Y based on sampling "
-    "the export (verified against 19-06-2024 and 26-06-2024 rows).<br/>"
-    "• Budget range &quot;5k-7k&quot; → use lower bound ($5k). Conservative."
+    "<b>Some of the calls I made</b><br/>"
+    "• The CSV format from the brief is what I treated as the standard input. Any "
+    "future export with the same columns will just work.<br/>"
+    "• If somebody says comparing options but there is no urgency signal, I put "
+    "them in nurture, not contact now. It could go either way, but I chose the "
+    "careful side.<br/>"
+    "• VC here — wanting to intro portfolio companies — disqualifies. They are not "
+    "the buyer.<br/>"
+    "• Date <font face=\"Courier\">04-06-2024</font> I read as D-M-Y, because I "
+    "checked it against 19-06-2024 and 26-06-2024 rows in the export.<br/>"
+    "• For budget range like 5k-7k I use the lower bound ($5k). Just to be safe."
 )
 
 tradeoffs_html = (
-    "<b>Design decisions &amp; trade-offs</b><br/>"
-    "• <b>Rule-based over LLM.</b> Deterministic (same CSV → same output), no API key, "
-    "every signal is explainable in the UI. Trade-off: won't catch novel phrasings — "
-    "the keyword lists need occasional tuning.<br/>"
-    "• <b>Contact-now threshold is deliberately tight.</b> Budget + title alone doesn't "
-    "qualify — too many &quot;comparing options&quot; leads have those. Requiring an "
-    "urgency phrase keeps the list at ~19% of inbound, which a rep can actually work "
-    "through in a week.<br/>"
-    "• <b>Disqualify is non-destructive.</b> Leads stay in the export, just flagged. "
-    "Easy to override.<br/>"
-    "• <b>Every signal is surfaced in the UI</b>, not just the score. Lets the rep audit "
-    "and override. The score is a starting point, not a verdict."
+    "<b>Trade-offs I am okay with</b><br/>"
+    "• <b>Rules over LLM.</b> Same CSV always gives the same output, no API key, "
+    "and every signal shows in the UI so you can see why. The flip side: it will not "
+    "catch new phrasings — the keyword lists will need small tuning from time to "
+    "time.<br/>"
+    "• <b>Contact-now is tight on purpose.</b> Budget and title alone is not enough "
+    "— too many comparing-options leads have those. Asking for an urgency phrase "
+    "keeps the list at about 19% of inbound, which a rep can actually work through "
+    "in a week.<br/>"
+    "• <b>Disqualify is not permanent.</b> Leads stay in the export, they just get "
+    "flagged. Easy to override.<br/>"
+    "• <b>Every signal is shown in the UI</b>, not just the score. So the rep can "
+    "audit and override. The score is a starting point, not a final verdict."
 )
 
 two_col = Table(
@@ -241,7 +213,7 @@ two_col.setStyle(TableStyle([
 ]))
 story.append(two_col)
 
-# ── build ───────────────────────────────────────────────────────────────────
+# build
 doc = SimpleDocTemplate(
     OUTPUT_PATH,
     pagesize=A4,
@@ -249,10 +221,10 @@ doc = SimpleDocTemplate(
     rightMargin=20 * mm,
     topMargin=15 * mm,
     bottomMargin=15 * mm,
-    title="Lead Triage — System Documentation",
-    author="Lead Triage",
-    subject="System documentation for the lead-triage assessment task",
-    creator="Lead Triage",
+    title="Lead Triage — how it works",
+    author="Crypterib",
+    subject="Lead triage system documentation",
+    creator="Crypterib",
 )
 doc.build(story)
 print(f"PDF generated: {OUTPUT_PATH}")
