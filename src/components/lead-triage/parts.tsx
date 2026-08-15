@@ -1,6 +1,7 @@
 "use client";
 
 import type { LeadStatus, Signal, ScoredLead } from "@/lib/leads";
+import { clsx } from "clsx";
 
 /* ---------- status helpers ---------- */
 export const STATUS_LABEL: Record<LeadStatus, string> = {
@@ -16,38 +17,61 @@ export const STATUS_SHORT: Record<LeadStatus, string> = {
 };
 
 /* ---------- StatusBadge ---------- */
+/* Sharp 2px corners, mono prefix tag, no rounded-full pill. Reads
+   more like a stamp than a tag. */
 export function StatusBadge({ status }: { status: LeadStatus }) {
   const cls = {
-    contact_now: "bg-[var(--status-go-bg)] text-[var(--status-go)] border-[var(--status-go)]/30",
-    nurture: "bg-[var(--status-hold-bg)] text-[var(--status-hold)] border-[var(--status-hold)]/30",
-    disqualify: "bg-[var(--status-no-bg)] text-[var(--status-no)] border-[var(--status-no)]/30",
+    contact_now:
+      "bg-[var(--status-go-bg)] text-[var(--status-go)] border-[var(--status-go)]/40",
+    nurture:
+      "bg-[var(--status-hold-bg)] text-[var(--status-hold)] border-[var(--status-hold)]/40",
+    disqualify:
+      "bg-[var(--status-no-bg)] text-[var(--status-no)] border-[var(--status-no)]/40",
   }[status];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${cls}`}
+      className={clsx(
+        "inline-flex items-center gap-1.5 border px-2 py-[3px] text-[11px] font-medium uppercase tracking-wide",
+        cls
+      )}
     >
-      <span className="h-1.5 w-1.5 rounded-full bg-current" />
-      {STATUS_LABEL[status]}
+      <span className="font-mono text-[9px] opacity-70">
+        {STATUS_SHORT[status]}
+      </span>
+      <span>{STATUS_LABEL[status]}</span>
     </span>
   );
 }
 
 /* ---------- ScoreBar ---------- */
-export function ScoreBar({ score, status }: { score: number; status: LeadStatus }) {
+/* Wider track, mono number, animated fill on mount. The number sits
+   to the right of the bar — same column for all rows so they align. */
+export function ScoreBar({
+  score,
+  status,
+  animate = true,
+}: {
+  score: number;
+  status: LeadStatus;
+  animate?: boolean;
+}) {
   const color = {
     contact_now: "var(--status-go)",
     nurture: "var(--status-hold)",
     disqualify: "var(--status-no)",
   }[status];
   return (
-    <div className="flex items-center gap-2">
-      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+    <div className="flex items-center gap-2.5">
+      <div className="relative h-[6px] w-20 overflow-hidden bg-muted">
         <div
-          className="h-full rounded-full transition-all"
+          className={clsx(
+            "absolute inset-y-0 left-0",
+            animate && "score-fill"
+          )}
           style={{ width: `${score}%`, backgroundColor: color }}
         />
       </div>
-      <span className="w-7 text-right font-mono text-xs tabular-nums text-foreground">
+      <span className="w-8 text-right font-mono text-xs tabular-nums text-foreground">
         {score}
       </span>
     </div>
@@ -55,28 +79,62 @@ export function ScoreBar({ score, status }: { score: number; status: LeadStatus 
 }
 
 /* ---------- SignalChip ---------- */
-const SIGNAL_KIND_STYLES: Record<Signal["kind"], string> = {
-  intent_strong: "bg-[var(--status-go-bg)] text-[var(--status-go)]",
-  intent_pain: "bg-orange-50 text-orange-800 border-orange-200",
-  intent_shopping: "bg-stone-100 text-stone-700 border-stone-200",
-  hesitation: "bg-amber-50 text-amber-800 border-amber-200",
-  disqualifier: "bg-red-50 text-red-800 border-red-200",
-  budget: "bg-stone-100 text-stone-700 border-stone-200",
-  authority: "bg-stone-100 text-stone-700 border-stone-200",
-  company: "bg-stone-100 text-stone-700 border-stone-200",
-  source: "bg-stone-100 text-stone-700 border-stone-200",
-};
+/* Square corners, denser, kind-prefix in mono. Sign in muted mono so
+   the chip reads as data, not as decoration. */
+const SIGNAL_KIND_STYLES: Record<Signal["kind"], { cls: string; tag: string }> =
+  {
+    intent_strong: {
+      cls: "bg-[var(--status-go-bg)] text-[var(--status-go)] border-[var(--status-go)]/30",
+      tag: "URG",
+    },
+    intent_pain: {
+      cls: "bg-orange-50 text-orange-900 border-orange-200",
+      tag: "PAIN",
+    },
+    intent_shopping: {
+      cls: "bg-stone-100 text-stone-800 border-stone-200",
+      tag: "SHOP",
+    },
+    hesitation: {
+      cls: "bg-[var(--status-hold-bg)] text-[var(--status-hold)] border-[var(--status-hold)]/30",
+      tag: "HES",
+    },
+    disqualifier: {
+      cls: "bg-red-50 text-red-900 border-red-200",
+      tag: "DQ",
+    },
+    budget: {
+      cls: "bg-stone-100 text-stone-800 border-stone-200",
+      tag: "BUD",
+    },
+    authority: {
+      cls: "bg-stone-100 text-stone-800 border-stone-200",
+      tag: "AUTH",
+    },
+    company: {
+      cls: "bg-stone-100 text-stone-800 border-stone-200",
+      tag: "TEAM",
+    },
+    source: {
+      cls: "bg-stone-100 text-stone-800 border-stone-200",
+      tag: "SRC",
+    },
+  };
 
 export function SignalChip({ signal }: { signal: Signal }) {
-  const cls = SIGNAL_KIND_STYLES[signal.kind];
+  const { cls, tag } = SIGNAL_KIND_STYLES[signal.kind];
   const sign = signal.points > 0 ? "+" : "";
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium ${cls}`}
+      className={clsx(
+        "inline-flex items-center gap-1 border px-1.5 py-[2px] text-[11px] font-medium",
+        cls
+      )}
       title={signal.detail}
     >
-      {signal.label}
-      <span className="font-mono opacity-60">
+      <span className="font-mono text-[9px] opacity-60">{tag}</span>
+      <span>{signal.label}</span>
+      <span className="font-mono opacity-70">
         {sign}
         {signal.points}
       </span>
@@ -85,32 +143,35 @@ export function SignalChip({ signal }: { signal: Signal }) {
 }
 
 /* ---------- LeadDetail (expanded row content) ---------- */
+/* Two-column layout. Left: notes + recommendation. Right: signal
+   breakdown + cleaned fields. Different background to visually
+   distinguish from the row above. */
 export function LeadDetail({ lead }: { lead: ScoredLead }) {
   return (
-    <div className="grid gap-6 bg-stone-50/50 p-5 md:grid-cols-[1fr_1fr]">
-      {/* Left column: notes + reason */}
-      <div className="space-y-4">
+    <div className="grid gap-px bg-[var(--rule)] md:grid-cols-[1fr_1fr]">
+      {/* Left column */}
+      <div className="space-y-5 bg-stone-50/70 p-5">
         <div>
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Recommendation
-          </div>
-          <p className="text-sm text-foreground">{lead.recommendation_reason}</p>
+          <div className="eyebrow mb-2">Recommendation</div>
+          <p className="text-sm leading-relaxed text-foreground">
+            {lead.recommendation_reason}
+          </p>
         </div>
         <div>
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Original notes
-          </div>
-          <p className="rounded border border-border bg-white p-3 text-sm leading-relaxed text-foreground">
-            {lead.notes || <span className="italic text-muted-foreground">(no notes)</span>}
+          <div className="eyebrow mb-2">Original notes</div>
+          <p className="border-l-2 border-[var(--primary)]/60 bg-white p-3 text-sm leading-relaxed text-foreground">
+            {lead.notes || (
+              <span className="italic text-muted-foreground">(no notes)</span>
+            )}
           </p>
         </div>
       </div>
 
-      {/* Right column: signals + cleaned fields */}
-      <div className="space-y-4">
+      {/* Right column */}
+      <div className="space-y-5 bg-white p-5">
         <div>
-          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Score breakdown ({lead.score} total)
+          <div className="eyebrow mb-2">
+            Score breakdown · {lead.score} total
           </div>
           <div className="flex flex-wrap gap-1.5">
             {lead.signals.map((s, i) => (
@@ -118,15 +179,25 @@ export function LeadDetail({ lead }: { lead: ScoredLead }) {
             ))}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs">
           <DetailField label="Lead ID" value={lead.lead_id} />
           <DetailField label="Created (raw)" value={lead.created_raw} />
           <DetailField label="Created (ISO)" value={lead.created_iso ?? "—"} />
-          <DetailField label="Email" value={lead.email || "—"} valid={lead.email_valid} />
+          <DetailField
+            label="Email"
+            value={lead.email || "—"}
+            valid={lead.email_valid}
+          />
           <DetailField label="Company" value={lead.company || "—"} />
           <DetailField label="Team size" value={lead.employees_raw || "—"} />
-          <DetailField label="Team (parsed)" value={lead.employees_est?.toString() ?? "—"} />
-          <DetailField label="Website" value={lead.website_normalized || "—"} />
+          <DetailField
+            label="Team (parsed)"
+            value={lead.employees_est?.toString() ?? "—"}
+          />
+          <DetailField
+            label="Website"
+            value={lead.website_normalized || "—"}
+          />
           <DetailField label="Title" value={lead.title || "—"} />
           <DetailField label="Source" value={lead.source || "—"} />
           <DetailField label="Budget (raw)" value={lead.budget_raw || "—"} />
@@ -151,11 +222,12 @@ function DetailField({
 }) {
   return (
     <div>
-      <div className="text-muted-foreground">{label}</div>
+      <div className="eyebrow mb-0.5">{label}</div>
       <div
-        className={`font-mono text-foreground ${
-          valid === false ? "text-red-700" : ""
-        }`}
+        className={clsx(
+          "font-mono text-foreground",
+          valid === false && "text-red-700"
+        )}
       >
         {value}
       </div>
