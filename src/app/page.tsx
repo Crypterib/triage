@@ -164,23 +164,6 @@ export default function Home() {
       {/* ===== Masthead ===== */}
       <header className="sticky top-0 z-20 border-b border-[var(--rule)] bg-background/95 backdrop-blur">
         <div className="mx-auto max-w-[1280px] px-5 md:px-8">
-          {/* Top hairline strip — build info, like a newspaper folio */}
-          <div className="flex items-center justify-between border-b border-[var(--rule)]/60 py-1.5 text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-            <span className="font-mono">
-              {BUILD_STAMP}
-            </span>
-            <span className="hidden sm:inline">
-              No blue · No LLM · No data leaves the request
-            </span>
-            <span className="font-mono">
-              {new Date().toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })}
-            </span>
-          </div>
-
           {/* Main masthead row */}
           <div className="flex items-end justify-between py-3">
             <div className="flex items-end gap-3">
@@ -515,13 +498,7 @@ export default function Home() {
 
             <div className="space-y-1 text-xs leading-relaxed text-muted-foreground">
               <p className="text-foreground">
-                Built by Crypterib for the Cohort 3 assessment, Task 1.
-              </p>
-              <p>
-                The triage engine is deterministic and rule-based — no LLM
-                calls, no embeddings, no API keys. CSV upload goes straight
-                to the serverless function and is discarded after the
-                response is returned.
+                Built by Crypterib.
               </p>
               <p>
                 Source:{" "}
